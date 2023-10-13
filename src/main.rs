@@ -2,6 +2,7 @@ use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use dotenv::dotenv;
 use services::users::services::users_routes;
 use sqlx::PgPool;
+use std::env;
 
 mod databases {
     pub mod postgres;
@@ -26,6 +27,7 @@ async fn health() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
+    env::set_var("RUST_BACKTRACE", "1");
 
     let json_web_token_environment =
         std::env::var("JSON_WEB_TOKEN_SECRET").expect("JSON_WEB_TOKEN_SECRET must be set");
