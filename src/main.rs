@@ -47,13 +47,13 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header();
 
         App::new()
-            /*             .app_data(web::Data::new(AppState {
+            .app_data(web::Data::new(AppState {
                 postgres_client: pool.clone(),
                 json_web_token_secret: json_web_token_environment.clone(),
-            })) */
+            }))
             .service(health)
-        /*             .configure(users_routes) */
-        /*             .wrap(cors) */
+            .configure(users_routes)
+            .wrap(cors)
     })
     .bind((
         "0.0.0.0",
