@@ -1,5 +1,8 @@
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+
+#[cfg(debug_assertions)]
 use dotenv::dotenv;
+
 use services::users::services::users_routes;
 use sqlx::PgPool;
 use std::env;
@@ -26,6 +29,7 @@ async fn health() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    #[cfg(debug_assertions)]
     dotenv().ok();
     env::set_var("RUST_BACKTRACE", "1");
 
