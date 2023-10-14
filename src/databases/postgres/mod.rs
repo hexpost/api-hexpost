@@ -8,11 +8,11 @@ pub async fn start_connection() -> PgPool {
         .connect(database_url.as_str())
         .await
         .expect("Failed to connect to Postgres");
-
+    /*
     sqlx::migrate!("src/databases/postgres/migrations")
         .run(&pool)
         .await
-        .expect("Failed to run migrations");
+        .expect("Failed to run migrations"); */
 
     pool
 }
