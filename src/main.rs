@@ -32,6 +32,8 @@ async fn main() -> std::io::Result<()> {
     let json_web_token_environment =
         std::env::var("JSON_WEB_TOKEN_SECRET").expect("JSON_WEB_TOKEN_SECRET must be set");
 
+    let port: String = env::var("PORT").expect("PORT must be set");
+
     let pool = databases::postgres::start_connection().await;
 
     HttpServer::new(move || {
@@ -49,7 +51,10 @@ async fn main() -> std::io::Result<()> {
             .configure(users_routes)
             .wrap(cors)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind((
+        "0.0.0.0",
+        port.parse::<u16>().expect("PORT must be a number"),
+    ))?
     .run()
     .await
 }
