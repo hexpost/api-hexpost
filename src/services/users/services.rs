@@ -56,6 +56,23 @@ async fn create_user(data: web::Data<AppState>, body: web::Json<CreateUser>) -> 
         return HttpResponse::NotFound().json(serde_json::json!({"error": "Password is required"}));
     }
 
+    let verify_email = sqlx::query!("SELECT * FROM users WHERE email = $1", body.email.clone())
+        .fetch_optional(&data.postgres_client)
+        .await;
+
+    match verify_email {
+        Ok(user) => {
+            if user.is_some() {
+                return HttpResponse::InternalServerError()
+                    .json(serde_json::json!({"error": "Email already exists"}));
+            }
+        }
+        Err(_) => {
+            return HttpResponse::InternalServerError()
+                .json(serde_json::json!({"error": "Failed to verify email"}))
+        }
+    }
+
     let hashed = bcrypt::hash(body.password.clone(), 10).expect("Failed to hash password");
 
     let result = sqlx::query!(
