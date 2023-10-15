@@ -47,6 +47,12 @@ async fn main() -> std::io::Result<()> {
                     .expect("CORS_ALLOWED_ORIGIN must be set")
                     .as_str(),
             )
+            .allowed_origin(
+                env::var("CORS_ALLOWED_ORIGIN_DEVELOPMENT")
+                    .expect("CORS_ALLOWED_ORIGIN_DEVELOPMENT must be set")
+                    .as_str(),
+            )
+            .allow_any_origin()
             .allow_any_method()
             .allow_any_header();
 
@@ -57,11 +63,14 @@ async fn main() -> std::io::Result<()> {
             }))
             .service(health)
             .configure(users_routes)
-            .wrap_fn(|req, srv| {
-                let proxy_authorization_header =
-                    HeaderName::from_lowercase(b"proxy-authorization").unwrap();
+            /* .wrap_fn(|req, srv| {
+                let proxy_authorization_header = HeaderName::from_lowercase(b"proxy-auth").unwrap();
                 let proxy_authorization = req.headers().get(&proxy_authorization_header).cloned();
                 let proxy_authorization_environment = std::env::var("PROXY_AUTHORIZATION").unwrap();
+                println!("{:?}", req);
+                println!("{:?}", proxy_authorization_header);
+                println!("{:?}", proxy_authorization);
+                println!("{:?}", proxy_authorization_environment);
                 let res = srv.call(req);
                 async move {
                     let res = res.await?;
@@ -84,7 +93,7 @@ async fn main() -> std::io::Result<()> {
                     }
                     Ok(res)
                 }
-            })
+            }) */
             .wrap(cors)
     })
     .bind((

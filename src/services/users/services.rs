@@ -1,4 +1,6 @@
-use super::models::{CreateUser, LoginClaims, LoginUser, UpdateUser, UserWithoutPassword};
+use super::models::{
+    AuthTokenUser, CreateUser, LoginClaims, LoginUser, UpdateUser, UserWithoutPassword,
+};
 use crate::AppState;
 use actix_web::{get, post, put, web, HttpResponse, Responder};
 use chrono::{TimeZone, Utc};
@@ -175,10 +177,34 @@ async fn login_user(data: web::Data<AppState>, body: web::Json<LoginUser>) -> im
     }
 }
 
+#[post("/users/auth")]
+async fn auth_token_user(
+    data: web::Data<AppState>,
+    body: web::Json<AuthTokenUser>,
+) -> impl Responder {
+    let token = body.token.clone();
+
+    let token = jsonwebtoken::decode::<LoginClaims>(
+        &token,
+        &jsonwebtoken::DecodingKey::from_secret(data.json_web_token_secret.as_bytes()),
+        &jsonwebtoken::Validation::default(),
+    );
+
+    match token {
+        Ok(token) => HttpResponse::Ok().json(serde_json::json!(
+            {"message": "Token is valid", "data": token.claims, "valid": true}
+        )),
+        Err(_) => {
+            HttpResponse::NotFound().json(serde_json::json!({"error": "Credentials not found", "valid": false}))
+        }
+    }
+}
+
 pub fn users_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_all_users)
         .service(create_user)
         .service(get_user_by_id)
         .service(update_user)
-        .service(login_user);
+        .service(login_user)
+        .service(auth_token_user);
 }

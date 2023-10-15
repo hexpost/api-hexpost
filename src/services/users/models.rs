@@ -45,3 +45,8 @@ pub struct LoginClaims {
     pub email: String,
     pub exp: usize,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct AuthTokenUser {
+    pub token: String,
+}
