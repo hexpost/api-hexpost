@@ -1,12 +1,12 @@
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
-
+use actix_web::{
+    dev::Service, get, http::header::HeaderName, web, App, HttpResponse, HttpServer, Responder,
+};
 #[cfg(debug_assertions)]
 use dotenv::dotenv;
-
+use serde_json::json;
 use services::users::services::users_routes;
 use sqlx::PgPool;
 use std::env;
-
 mod databases {
     pub mod postgres;
 }
@@ -53,6 +53,34 @@ async fn main() -> std::io::Result<()> {
             }))
             .service(health)
             .configure(users_routes)
+            .wrap_fn(|req, srv| {
+                let proxy_authorization_header =
+                    HeaderName::from_lowercase(b"proxy-authorization").unwrap();
+                let proxy_authorization = req.headers().get(&proxy_authorization_header).cloned();
+                let proxy_authorization_environment = std::env::var("PROXY_AUTHORIZATION").unwrap();
+                let res = srv.call(req);
+                async move {
+                    let res = res.await?;
+                    match proxy_authorization {
+                        Some(authorization) => {
+                            let auth = authorization;
+                            if proxy_authorization_environment != auth.to_str().unwrap() {
+                                return Err(actix_web::error::ErrorUnauthorized(json!({
+                                    "message": "Unauthorized request"
+                                }))
+                                .into());
+                            }
+                        }
+                        None => {
+                            return Err(actix_web::error::ErrorUnauthorized(json!({
+                                "message": "Unauthorized request"
+                            }))
+                            .into());
+                        }
+                    }
+                    Ok(res)
+                }
+            })
             .wrap(cors)
     })
     .bind((
