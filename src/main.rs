@@ -42,7 +42,11 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         let cors = actix_cors::Cors::default()
-            .allow_any_origin()
+            .allowed_origin(
+                env::var("CORS_ALLOWED_ORIGIN")
+                    .expect("CORS_ALLOWED_ORIGIN must be set")
+                    .as_str(),
+            )
             .allow_any_method()
             .allow_any_header();
 
