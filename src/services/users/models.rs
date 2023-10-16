@@ -41,6 +41,7 @@ pub struct LoginUser {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LoginClaims {
+    pub name: String,
     pub sub: String,
     pub email: String,
     pub exp: usize,

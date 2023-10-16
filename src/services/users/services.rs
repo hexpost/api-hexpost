@@ -155,6 +155,7 @@ async fn login_user(data: web::Data<AppState>, body: web::Json<LoginUser>) -> im
 
             if is_valid {
                 let claims = LoginClaims {
+                    name: user.username.clone(),
                     sub: user.id.to_string(),
                     email: user.email,
                     exp: (Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
@@ -194,9 +195,8 @@ async fn auth_token_user(
         Ok(token) => HttpResponse::Ok().json(serde_json::json!(
             {"message": "Token is valid", "data": token.claims, "valid": true}
         )),
-        Err(_) => {
-            HttpResponse::NotFound().json(serde_json::json!({"error": "Credentials not found", "valid": false}))
-        }
+        Err(_) => HttpResponse::NotFound()
+            .json(serde_json::json!({"error": "Credentials not found", "valid": false})),
     }
 }
 
